@@ -1,0 +1,2272 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>রোমান্টিক চ্যাট অ্যাপ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background: #e5ddd5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        .chat-container {
+            max-width: 600px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 15px 10px;
+            background: #075e54;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .header .user-info {
+            flex: 1;
+        }
+        .header .user-info h3 {
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .header .user-info p {
+            font-size: 10px;
+            color: #d1e8e2;
+        }
+        .header .icons {
+            display: flex;
+            gap: 20px;
+        }
+        .header .icons i {
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .header .date-display {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: #555;
+            display: none;
+            z-index: 9;
+        }
+        .chat-area {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-image: url('https://images.unsplash.com/photo-1593932433189-753a271b1f52?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center top;
+            background-repeat: no-repeat;
+            scroll-behavior: smooth;
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
+            display: flex;
+            flex-direction: column;
+            overscroll-behavior: contain;
+        }
+        .date-header {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #555;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 10px;
+            margin: 10px auto;
+            display: block;
+            width: fit-content;
+            pointer-events: none;
+        }
+        .message {
+            margin: 5px 0;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            user-select: none;
+        }
+        .message.sent {
+            align-items: flex-end;
+        }
+        .message.received {
+            align-items: flex-start;
+        }
+        .message.sent .message-content {
+            background-color: #0084ff;
+            border-radius: 15px 15px 0 15px;
+            padding: 8px 12px;
+            max-width: 70%;
+            word-wrap: break-word;
+            color: #fff;
+            position: relative;
+        }
+        .message.received .message-content {
+            background-color: white;
+            border-radius: 15px 15px 15px 0;
+            padding: 8px 12px;
+            max-width: 70%;
+            word-wrap: break-word;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .message-content {
+            display: flex;
+            flex-direction: column;
+            touch-action: manipulation;
+        }
+        .message-time {
+            font-size: 0.8rem;
+            align-self: flex-end;
+            margin-top: 2px;
+        }
+        .tick-marks {
+            display: inline-block;
+            margin-left: 5px;
+            color: white;
+        }
+        .message.reaction {
+            margin-top: 2px;
+            align-self: flex-end;
+        }
+        .reaction-btn {
+            background-color: #000;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 5px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .typing {
+            display: none;
+            color: gray;
+            font-style: italic;
+        }
+        .typing .message-content {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            background-color: white;
+            border-radius: 15px 15px 15px 0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            background-color: #757575;
+            border-radius: 50%;
+            margin: 0 2px;
+            position: relative;
+            animation: rotateAndMove 1.5s infinite linear;
+        }
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes rotateAndMove {
+            0% {
+                transform: rotate(0deg) translateX(0px);
+                opacity: 0.3;
+            }
+            33% {
+                transform: rotate(120deg) translateX(-10px);
+                opacity: 1;
+            }
+            66% {
+                transform: rotate(240deg) translateX(-20px);
+                opacity: 0.3;
+            }
+            100% {
+                transform: rotate(360deg) translateX(0px);
+                opacity: 0.3;
+            }
+        }
+        .input-area {
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            background: transparent;
+            position: relative;
+            z-index: 10;
+            background-size: cover;
+            background-position: center bottom;
+            background-repeat: no-repeat;
+            touch-action: none;
+        }
+        .input-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .input-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: rgba(240, 240, 240, 0.9);
+            border-radius: 20px;
+            padding: 2px 5px;
+            position: relative;
+            transition: bottom 0.3s ease;
+        }
+        .input-wrapper i {
+            font-size: 22px;
+            color: #888;
+            margin: 0 8px;
+            cursor: pointer;
+        }
+        .input-wrapper textarea {
+            flex: 1;
+            padding: 8px 8px 8px 0;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            background: transparent;
+            outline: none;
+            resize: none;
+            min-height: 40px;
+            line-height: 1.2;
+            width: calc(100% - 30px);
+            margin-right: 15px;
+            overflow-y: auto;
+            touch-action: none;
+        }
+        .placeholder-text {
+            position: absolute;
+            top: 50%;
+            left: 48px;
+            transform: translateY(-50%);
+            color: #888;
+            font-size: 16px;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .input-area .mic, .input-area .send {
+            color: white;
+            border-radius: 50%;
+            padding: 10px;
+            font-size: 20px;
+            margin-left: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            transition: bottom 0.3s ease;
+        }
+        .input-area .mic {
+            background: #ff6f61;
+        }
+        .input-area .send {
+            background: #00ff00;
+        }
+        .image-upload-container {
+            display: none;
+        }
+        .image-upload-container input[type="file"] {
+            display: none;
+        }
+        .image-preview {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .image-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .plus-menu {
+            display: none;
+            position: absolute;
+            bottom: 60px;
+            left: 20px;
+            background-color: white;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            padding: 10px;
+            z-index: 1000;
+        }
+        .plus-menu button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            background-color: #0084ff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: left;
+        }
+        .calendar-form {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        .calendar-form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .calendar-form button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #0084ff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .question-list, .main-question-list, .answer-list {
+            display: none;
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 600px;
+            background-color: white;
+            border: 1px solid #ddd;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            scroll-behavior: smooth;
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
+        }
+        .question-list input[type="text"], .main-question-list input[type="text"], .answer-list input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .question-item, .main-question-item, .answer-item {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        .question-item button, .main-question-item button, .answer-item button {
+            margin-left: 5px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .question-item button.edit, .main-question-item button.edit, .answer-item button.edit {
+            background-color: #0084ff;
+            color: white;
+        }
+        .question-item button.delete, .main-question-item button.delete, .answer-item button.delete {
+            background-color: #ff4444;
+            color: white;
+        }
+        .main-question-item .add-sub-btn, .answer-item .add-answer-btn {
+            background-color: #00cc00;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        .message-search-form {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 500px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            scroll-behavior: smooth;
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
+        }
+        .message-search-form input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .message-search-item {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+        }
+        .message-search-item:hover {
+            background-color: #f0f0f0;
+        }
+        .message-options {
+            display: none;
+            position: sticky;
+            top: 60px;
+            background-color: #f0f0f0;
+            border-bottom: 1px solid #ddd;
+            padding: 5px;
+            z-index: 1000;
+            width: 100%;
+            justify-content: space-around;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .message-options .action-buttons {
+            display: flex;
+            justify-content: space-around;
+            padding: 5px;
+        }
+        .message-options .action-buttons button {
+            padding: 8px 15px;
+            border: none;
+            background-color: transparent;
+            color: #333;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 5px;
+        }
+        .message-options .action-buttons button:hover {
+            background-color: #e0e0e0;
+        }
+        .message-options .action-buttons button[onclick="deleteMessage()"] {
+            color: #ff4444;
+        }
+        .reaction-menu {
+            display: none;
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            padding: 5px;
+            z-index: 1000;
+            border-radius: 50px;
+            width: 6.3cm;
+            overflow-x: auto;
+            white-space: nowrap;
+            scroll-behavior: smooth;
+            touch-action: pan-x;
+            -webkit-overflow-scrolling: touch;
+        }
+        .reaction-menu .emoji-options {
+            display: flex;
+            flex-direction: row-reverse;
+        }
+        .reaction-menu .emoji-options button {
+            padding: 5px;
+            margin: 2px;
+            border: none;
+            background: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .input-form, .profile-form, .settings-form, .message-edit-form, .emoji-settings-form, .box-settings-form, .main-question-form, .answer-form, .edit-full-form {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            width: 90%;
+            max-height: 400px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
+        }
+        .emoji-settings-form div {
+            display: flex;
+            flex-direction: column;
+        }
+        .input-form input, .profile-form input, .settings-form input, .message-edit-form input, .emoji-settings-form input, .box-settings-form input, .main-question-form input, .answer-form input, .edit-full-form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .input-form button, .profile-form button, .settings-form button, .message-edit-form button, .emoji-settings-form button, .box-settings-form button, .main-question-form button, .answer-form button, .edit-full-form button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #0084ff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .input-form button.cancel, .edit-full-form button.cancel {
+            background-color: #ff4444;
+        }
+        .main-question-form .sub-question-container, .answer-form .answer-container, .edit-full-form .sub-question-container, .edit-full-form .answer-container {
+            margin-bottom: 10px;
+        }
+        .main-question-form .add-sub-btn, .answer-form .add-answer-btn, .edit-full-form .add-sub-btn, .edit-full-form .add-answer-btn {
+            background-color: #00cc00;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .go-to-latest-btn {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background-color: #0084ff;
+            color: white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 1000;
+        }
+        .go-to-latest-btn i {
+            font-size: 24px;
+        }
+        @media (max-width: 600px) {
+            .chat-container {
+                width: 100%;
+            }
+            .input-form, .profile-form, .settings-form, .calendar-form, .message-search-form, .message-edit-form, .emoji-settings-form, .box-settings-form, .main-question-form, .answer-form, .edit-full-form {
+                width: 90%;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="header" id="header">
+            <a href="#" style="color: white; margin-right: 10px;"><i class="fas fa-arrow-left"></i></a>
+            <img id="profilePic" src="" alt="User" onclick="showProfileForm()">
+            <div class="user-info" onclick="showProfileForm()">
+                <h3 id="profileName">রোমান্টিক চ্যাট অ্যাপ</h3>
+                <p>Online</p>
+            </div>
+            <div class="date-display" id="dateDisplay"></div>
+            <div class="icons">
+                <i class="fas fa-video"></i>
+                <i class="fas fa-phone" style="transform: scaleX(-1);"></i>
+                <i class="fas fa-ellipsis-v menu-button"></i>
+            </div>
+        </div>
+
+        <!-- Message Options (Sticky at Top) -->
+        <div class="message-options" id="messageOptionsMenu">
+            <div class="action-buttons">
+                <button onclick="copyMessage()">📎</button>
+                <button onclick="editMessage()">🖋️</button>
+                <button onclick="deleteMessage()">🗑️</button>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area" id="chatBody">
+            <!-- Messages will be appended here -->
+        </div>
+
+        <!-- Go to Latest Button -->
+        <div class="go-to-latest-btn" id="goToLatestBtn" onclick="scrollToLatest()">
+            <i class="fas fa-arrow-down"></i>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area" id="inputArea">
+            <div class="input-container">
+                <div class="input-wrapper" id="messageInputWrapper">
+                    <span class="emoji-btn"><i class="fas fa-smile"></i></span>
+                    <textarea id="messageInput" rows="1" wrap="soft"></textarea>
+                    <span class="placeholder-text" id="placeholderText">Type a message...</span>
+                    <span class="link-btn"><i class="fas fa-paperclip"></i></span>
+                    <span class="camera-btn"><i class="fas fa-camera"></i></span>
+                </div>
+                <span id="micSendBtn" class="mic"><i class="fas fa-microphone"></i></span>
+            </div>
+            <!-- Hidden Image Upload -->
+            <div class="image-upload-container">
+                <input type="file" id="imageUpload" accept="image/*" onchange="handleImageUpload(event)">
+            </div>
+            <div class="image-preview" id="imagePreview"></div>
+        </div>
+
+        <!-- Plus Menu -->
+        <div class="plus-menu" id="plusMenu">
+            <button onclick="showClearAllConfirm()">All Clear</button>
+            <button onclick="showCalendarForm()">Time</button>
+        </div>
+
+        <!-- Question List -->
+        <div class="question-list" id="questionList">
+            <input type="text" id="questionSearch" placeholder="🔎 Search your Question And Answer..." onkeyup="filterQuestions()">
+            <div id="questionItems"></div>
+            <button onclick="hideQuestionList()">বন্ধ করো</button>
+        </div>
+
+        <!-- Main Question List -->
+        <div class="main-question-list" id="mainQuestionList">
+            <input type="text" id="mainQuestionSearch" placeholder="🔎 Search Main Questions..." onkeyup="filterMainQuestions()">
+            <div id="mainQuestionItems"></div>
+            <button onclick="hideMainQuestionList()">বন্ধ</button>
+        </div>
+
+        <!-- Answer List -->
+        <div class="answer-list" id="answerList">
+            <input type="text" id="answerSearch" placeholder="🔎 Search Answers..." onkeyup="filterAnswers()">
+            <div id="answerItems"></div>
+            <button onclick="hideAnswerList()">বন্ধ</button>
+        </div>
+
+        <!-- Forms -->
+        <div class="input-form" id="inputForm">
+            <p id="formQuestion"></p>
+            <input type="text" id="formAnswer" placeholder="Write The Answer...">
+            <button onclick="submitAnswer()">OK</button>
+            <button class="cancel" onclick="cancelInputForm()">Cancel</button>
+        </div>
+        <div class="profile-form" id="profileForm">
+            <p>Set Profile</p>
+            <input type="text" id="nameInput" placeholder="What is your Girlfriend's Name...">
+            <input type="file" id="picInput" accept="image/*" onchange="handleProfilePicUpload()">
+            <button onclick="saveProfile()">Save</button>
+        </div>
+        <div class="settings-form" id="settingsForm">
+            <p>⚙️</p>
+            <button onclick="showMessageSearchForm()">Search_adv Message</button>
+            <button onclick="showEmojiSettingsForm()">Set Your Emoji</button>
+            <button onclick="showBoxSettingsForm()">Box Settings</button>
+            <label>Background Picture:</label>
+            <input type="file" id="bgPicInput" accept="image/*" onchange="setBackgroundImage()">
+            <label>Colour Of Message Board:</label>
+            <input type="color" id="boardColorInput" value="#f0f2f5">
+            <label>Colour Of MessageSent Box:</label>
+            <input type="color" id="sentBoxColorInput" value="#0084ff">
+            <label>Colour Of Reply Box:</label>
+            <input type="color" id="replyBoxColorInput" value="#ffffff">
+            <label>Colour Of SentMessage Text:</label>
+            <input type="color" id="sentTextColorInput" value="#ffffff">
+            <label>Colour Of ReplyMessage Text:</label>
+            <input type="color" id="replyTextColorInput" value="#000000">
+            <label>Colour Of Time:</label>
+            <input type="color" id="timeColorInput" value="#555">
+            <label>Colour Of Date Header Text:</label>
+            <input type="color" id="dateHeaderTextColorInput" value="#555">
+            <label>Colour Of Date Header Box:</label>
+            <input type="color" id="dateHeaderBoxColorInput" value="#ffffff">
+            <button onclick="saveSettings()">Save</button>
+        </div>
+        <div class="box-settings-form" id="boxSettingsForm">
+            <p>📐 Box Settings</p>
+            <label>Colour Of Header:</label>
+            <input type="color" id="headerColorInput" value="#075e54">
+            <label>Colour Of Header Time:</label>
+            <input type="color" id="headerTimeColorInput" value="#555">
+            <label>Colour Of Message Input:</label>
+            <input type="color" id="messageInputColorInput" value="#f0f2f5">
+            <label>Colour Of Message Input Text:</label>
+            <input type="color" id="messageInputTextColorInput" value="#000000">
+            <label>Reaction Menu Width (cm):</label>
+            <input type="number" id="reactionMenuWidthInput" value="6.3" step="0.1">
+            <label>Reaction Menu Background Color:</label>
+            <input type="color" id="reactionMenuBgColorInput" value="#ffffff">
+            <label>Go to Latest Button Size (px):</label>
+            <input type="number" id="goToLatestBtnSizeInput" value="50" step="1">
+            <label>Go to Latest Button Color:</label>
+            <input type="color" id="goToLatestBtnColorInput" value="#0084ff">
+            <label>Cursor Color:</label>
+            <input type="color" id="cursorColorInput" value="#000000">
+            <button onclick="saveBoxSettings()">Save</button>
+        </div>
+        <div class="calendar-form" id="calendarForm">
+            <p>Select Time And Date</p>
+            <label>Start Date:</label>
+            <input type="date" id="startDate">
+            <label>Start Time:</label>
+            <input type="time" id="startTime">
+            <label>Last Date:</label>
+            <input type="date" id="endDate">
+            <label>Last Time:</label>
+            <input type="time" id="endTime">
+            <button onclick="deleteMessagesByDateTime()">Delete</button>
+            <button onclick="hideCalendarForm()">Cancel</button>
+        </div>
+        <div class="message-search-form" id="messageSearchForm">
+            <p>Search Your Message</p>
+            <input type="text" id="messageSearchInput" placeholder="🔎 Find Your Message..." onkeyup="filterMessages()">
+            <div id="messageSearchResults"></div>
+            <button onclick="hideMessageSearchForm()">Stop</button>
+        </div>
+        <div class="message-edit-form" id="messageEditForm">
+            <p>Edit Your Message</p>
+            <input type="text" id="messageEditInput" placeholder="Type Your New Message...">
+            <button onclick="submitEditedMessage()">OK</button>
+        </div>
+        <div class="emoji-settings-form" id="emojiSettingsForm">
+            <p>Set Your Emoji</p>
+            <input type="text" id="emojiInput" placeholder="Set Emoji">
+            <button onclick="addEmoji()">Add</button>
+            <div id="emojiList"></div>
+            <button onclick="hideEmojiSettingsForm()">Close</button>
+        </div>
+        <div class="main-question-form" id="mainQuestionForm">
+            <p>প্রশ্ন সেট করুন</p>
+            <input type="text" id="mainQuestionInput" placeholder="মেন প্রশ্ন লিখুন...">
+            <div id="subQuestionsContainer">
+                <div class="sub-question-container">
+                    <input type="text" class="subQuestionInput" placeholder="সাব প্রশ্ন লিখুন...">
+                </div>
+            </div>
+            <button class="add-sub-btn" onclick="addSubQuestionInput()">+</button>
+            <button onclick="submitMainQuestion()">OK</button>
+            <button onclick="cancelMainQuestionForm()">Cancel</button>
+        </div>
+        <div class="answer-form" id="answerForm">
+            <p>উত্তর সেট করুন</p>
+            <input type="text" id="answerQuestionInput" placeholder="প্রশ্ন লিখুন...">
+            <div id="answersContainer">
+                <div class="answer-container">
+                    <input type="text" class="answerInput" placeholder="উত্তর লিখুন...">
+                </div>
+            </div>
+            <button class="add-answer-btn" onclick="addAnswerInput()">+</button>
+            <button onclick="submitAnswerForm()">OK</button>
+            <button onclick="cancelAnswerForm()">Cancel</button>
+        </div>
+        <div class="edit-full-form" id="editFullForm">
+            <p>প্রশ্ন ও উত্তর এডিট করুন</p>
+            <input type="text" id="editMainQuestionInput" placeholder="মেন প্রশ্ন লিখুন...">
+            <div id="editSubQuestionsContainer">
+                <div class="sub-question-container">
+                    <input type="text" class="editSubQuestionInput" placeholder="সাব প্রশ্ন লিখুন...">
+                </div>
+            </div>
+            <button class="add-sub-btn" onclick="addEditSubQuestionInput()">+ সাব প্রশ্ন</button>
+            <div id="editAnswersContainer">
+                <div class="answer-container">
+                    <input type="text" class="editAnswerInput" placeholder="উত্তর লিখুন...">
+                </div>
+            </div>
+            <button class="add-answer-btn" onclick="addEditAnswerInput()">+ উত্তর</button>
+            <button onclick="submitEditFullForm()">সেভ</button>
+            <button class="cancel" onclick="cancelEditFullForm()">বাতিল</button>
+        </div>
+        <div class="reaction-menu" id="reactionMenu">
+            <div class="emoji-options" id="emojiOptionsMenu"></div>
+        </div>
+    </div>
+
+    <script>
+        // Predefined romantic responses
+        const predefinedResponses = {
+            "হাই": "হাই, কেমন আছো?",
+            "হেলো": "হেলো, কিরে খবর কি",
+            "তুমি কেমন আছো": "আমিও ভালো আছি",
+            "কী খবর": "এইতো ভালো তুমি কেমন আছো",
+            "আই লাভ ইউ": "আই লাভ ইউ আমার জান 😍",
+            "গুড মর্নিং": "শুভ সকাল, আমার জান",
+            "গুড নাইট": "মিষ্টি স্বপ্ন দেখো, আমার জান! আমি তোমার স্বপ্নে থাকব। 😴💕",
+            "তুমি কী করছো": "সবসময় তোমার কথা ভাবছি! 😘 তুমি কী করছো?",
+            "তোমাকে মিস করি": "আমিও তোমাকে মিস করি, বেবি 💖",
+            "hi": "Hey sweetie! How's my favorite person doing? 😘",
+            "hello": "Hello, my love! What's on your mind? 💕",
+            "how are you": "I'm always happy when I'm with you! How about you, darling? 🥰",
+            "what's up": "Everything's great, my love! What's up with you? 💕",
+            "i love you": "Aww, I love you too, my heart! 😍",
+            "good morning": "Good morning, sunshine! Ready to make today amazing? 🌞",
+            "good night": "Sweet dreams, my love! I'll be dreaming of you. 😴💕",
+            "what are you doing": "Just thinking about you, as always! 😘 What's up with you?",
+            "miss you": "I miss you too, baby! Can't wait to chat more. 💖"
+        };
+
+        // Default learned responses
+        let defaultLearnedResponses = {
+            "তুমি কোথায় আছো": "আমি তোমার হৃদয়ে আছি, প্রিয়! 💖 তুমি কোথায় আছো?",
+            "কাল কী করবে": "কাল তোমার সাথে সময় কাটাবো, আমার জান 😘 তুমি কী করবে?"
+        };
+
+        // Main questions and sub-questions
+        let mainQuestions = JSON.parse(localStorage.getItem('mainQuestions')) || {};
+        // Answers for questions
+        let answers = JSON.parse(localStorage.getItem('answers')) || {};
+
+        // Load data from localStorage
+        let messages = JSON.parse(localStorage.getItem('messages')) || [];
+        let customEmojis = JSON.parse(localStorage.getItem('customEmojis')) || ['❤️', '😊', '😂', '👍'];
+        let currentQuestion = '';
+        let selectedMessageIndex = -1;
+        let currentEditIndex = -1;
+
+        const profilePic = document.getElementById('profilePic');
+        const profileName = document.getElementById('profileName');
+        const chatBody = document.getElementById('chatBody');
+        const goToLatestBtn = document.getElementById('goToLatestBtn');
+        const inputArea = document.getElementById('inputArea');
+
+        // Load saved settings
+        const savedPic = localStorage.getItem('profilePic');
+        const savedName = localStorage.getItem('profileName');
+        const savedBgPic = localStorage.getItem('bgPic');
+        const savedBoardColor = localStorage.getItem('boardColor');
+        const savedSentBoxColor = localStorage.getItem('sentBoxColor');
+        const savedReplyBoxColor = localStorage.getItem('replyBoxColor');
+        const savedSentTextColor = localStorage.getItem('sentTextColor');
+        const savedReplyTextColor = localStorage.getItem('replyTextColor');
+        const savedTimeColor = localStorage.getItem('timeColor');
+        const savedHeaderColor = localStorage.getItem('headerColor');
+        const savedHeaderTimeColor = localStorage.getItem('headerTimeColor');
+        const savedMessageInputColor = localStorage.getItem('messageInputColor');
+        const savedMessageInputTextColor = localStorage.getItem('messageInputTextColor');
+        const savedDateHeaderTextColor = localStorage.getItem('dateHeaderTextColor');
+        const savedDateHeaderBoxColor = localStorage.getItem('dateHeaderBoxColor');
+        const savedReactionMenuWidth = localStorage.getItem('reactionMenuWidth');
+        const savedReactionMenuBgColor = localStorage.getItem('reactionMenuBgColor');
+        const savedCursorColor = localStorage.getItem('cursorColor');
+        const savedGoToLatestBtnSize = localStorage.getItem('goToLatestBtnSize');
+        const savedGoToLatestBtnColor = localStorage.getItem('goToLatestBtnColor');
+
+        if (savedPic) profilePic.src = savedPic;
+        if (savedName) profileName.textContent = savedName;
+        if (savedBgPic) {
+            chatBody.style.backgroundImage = `url(${savedBgPic})`;
+            chatBody.style.backgroundSize = 'cover';
+            chatBody.style.backgroundPosition = 'center top';
+            inputArea.style.backgroundImage = `url(${savedBgPic})`;
+            inputArea.style.backgroundSize = 'cover';
+            inputArea.style.backgroundPosition = 'center bottom';
+            inputArea.style.backgroundRepeat = 'no-repeat';
+        }
+        if (savedBoardColor) chatBody.style.backgroundColor = savedBoardColor;
+        if (savedHeaderColor) document.getElementById('header').style.backgroundColor = savedHeaderColor;
+        if (savedHeaderTimeColor) document.getElementById('dateDisplay').style.color = savedHeaderTimeColor;
+        if (savedMessageInputColor) document.getElementById('messageInputWrapper').style.backgroundColor = savedMessageInputColor;
+        if (savedMessageInputTextColor) document.getElementById('messageInput').style.color = savedMessageInputTextColor;
+        if (savedDateHeaderTextColor) document.querySelectorAll('.date-header').forEach(header => header.style.color = savedDateHeaderTextColor);
+        if (savedDateHeaderBoxColor) document.querySelectorAll('.date-header').forEach(header => header.style.backgroundColor = savedDateHeaderBoxColor);
+        if (savedReactionMenuWidth) document.querySelector('.reaction-menu').style.width = `${savedReactionMenuWidth}cm`;
+        if (savedReactionMenuBgColor) document.querySelector('.reaction-menu').style.backgroundColor = savedReactionMenuBgColor;
+        if (savedCursorColor) document.querySelector('#messageInput').style.caretColor = savedCursorColor;
+        if (savedGoToLatestBtnSize) {
+            goToLatestBtn.style.width = `${savedGoToLatestBtnSize}px`;
+            goToLatestBtn.style.height = `${savedGoToLatestBtnSize}px`;
+        }
+        if (savedGoToLatestBtnColor) goToLatestBtn.style.backgroundColor = savedGoToLatestBtnColor;
+
+        // Input area functionality
+        const messageInput = document.getElementById('messageInput');
+        const emojiBtn = document.querySelector('.emoji-btn');
+        const cameraBtn = document.querySelector('.camera-btn');
+        const linkBtn = document.querySelector('.link-btn');
+        const micSendBtn = document.getElementById('micSendBtn');
+        const placeholderText = document.getElementById('placeholderText');
+
+        function toggleInputState() {
+            const hasText = messageInput.value.trim().length > 0;
+            emojiBtn.classList.toggle('hidden', hasText);
+            cameraBtn.classList.toggle('hidden', hasText);
+            placeholderText.style.display = hasText ? 'none' : 'block';
+            if (hasText) {
+                micSendBtn.classList.remove('mic');
+                micSendBtn.classList.add('send');
+                micSendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            } else {
+                micSendBtn.classList.remove('send');
+                micSendBtn.classList.add('mic');
+                micSendBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+            }
+        }
+
+        messageInput.addEventListener('input', () => {
+            toggleInputState();
+            messageInput.style.height = '40px';
+            messageInput.style.height = `${Math.min(messageInput.scrollHeight, 120)}px`;
+        });
+
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        messageInput.addEventListener('focus', () => {
+            setTimeout(() => {
+                chatBody.scrollTo({
+                    top: chatBody.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 200);
+        });
+
+        micSendBtn.addEventListener('click', () => {
+            if (micSendBtn.classList.contains('send')) {
+                sendMessage();
+            }
+        });
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imagePreview = document.getElementById('imagePreview');
+                    imagePreview.innerHTML = `<img src="${e.target.result}" alt="Uploaded Image">`;
+                    sendImageMessage(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function sendImageMessage(imageSrc) {
+            const timestamp = new Date().toISOString();
+            const newMessage = {
+                text: `<img src="${imageSrc}" alt="Sent Image" style="max-width: 100%; border-radius: 10px;">`,
+                type: 'sent',
+                timestamp,
+                reaction: null
+            };
+            messages.push(newMessage);
+            appendMessage(newMessage.text, 'sent', timestamp, messages.length - 1, newMessage.reaction);
+            saveMessages();
+            document.getElementById('imagePreview').innerHTML = '';
+        }
+
+        // Go to Latest Button Visibility on Scroll
+        chatBody.addEventListener('scroll', () => {
+            const scrollPosition = chatBody.scrollTop + chatBody.clientHeight;
+            const scrollHeight = chatBody.scrollHeight;
+            if (scrollHeight - scrollPosition > 100) {
+                goToLatestBtn.style.display = 'flex';
+            } else {
+                goToLatestBtn.style.display = 'none';
+            }
+
+            const dateHeaders = document.querySelectorAll('.date-header');
+            const dateDisplay = document.getElementById('dateDisplay');
+            let visibleDate = null;
+
+            dateHeaders.forEach(header => {
+                const rect = header.getBoundingClientRect();
+                if (rect.top >= 0 && rect.top <= window.innerHeight) {
+                    visibleDate = header.textContent;
+                }
+            });
+
+            if (visibleDate) {
+                dateDisplay.textContent = visibleDate;
+                dateDisplay.style.display = 'block';
+            } else {
+                dateDisplay.style.display = 'none';
+            }
+
+            clearTimeout(hideDateTimeout);
+            hideDateTimeout = setTimeout(() => {
+                dateDisplay.style.display = 'none';
+            }, 3000);
+        });
+
+        let hideDateTimeout;
+
+        function scrollToLatest() {
+            chatBody.scrollTo({
+                top: chatBody.scrollHeight,
+                behavior: 'smooth'
+            });
+            goToLatestBtn.style.display = 'none';
+        }
+
+        window.onload = function() {
+            const defaultMessages = [
+                { text: "হাই! কেমন আছো? 😊", type: "received", timestamp: new Date().toISOString(), reaction: null },
+                { text: "হাই! আমি ভালো, তুমি কেমন আছো? 😄", type: "sent", timestamp: new Date().toISOString(), reaction: null },
+                { text: "আমিও ভালো। আজ কী করলে? 🧐", type: "received", timestamp: new Date().toISOString(), reaction: null },
+                { text: "এই তো, একটু বন্ধুদের সাথে সময় কাটালাম", type: "sent", timestamp: new Date().toISOString(), reaction: null },
+                { text: "ভালোই বন্ধুদের পেয়ে আমাকে ভুলে গেলে 😭", type: "received", timestamp: new Date().toISOString(), reaction: null }
+            ];
+
+            messages = JSON.parse(localStorage.getItem('messages')) || defaultMessages;
+            localStorage.setItem('messages', JSON.stringify(messages));
+            loadLearnedResponses();
+            loadMessages();
+        };
+
+        function loadMessages() {
+            chatBody.innerHTML = '';
+            let lastDate = null;
+            messages.forEach((msg, index) => {
+                const currentDate = new Date(msg.timestamp);
+                const currentDateString = currentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+                if (!lastDate || lastDate !== currentDateString) {
+                    const dateHeader = document.createElement('div');
+                    dateHeader.className = 'date-header';
+                    dateHeader.textContent = currentDateString;
+                    if (savedDateHeaderTextColor) dateHeader.style.color = savedDateHeaderTextColor;
+                    if (savedDateHeaderBoxColor) dateHeader.style.backgroundColor = savedDateHeaderBoxColor;
+                    chatBody.appendChild(dateHeader);
+                    lastDate = currentDateString;
+                }
+
+                appendMessage(msg.text, msg.type, msg.timestamp, index, msg.reaction);
+            });
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function saveMessages() {
+            localStorage.setItem('messages', JSON.stringify(messages));
+        }
+
+        function saveCustomEmojis() {
+            localStorage.setItem('customEmojis', JSON.stringify(customEmojis));
+        }
+
+        function saveLearnedResponses() {
+            localStorage.setItem('defaultLearnedResponses', JSON.stringify(defaultLearnedResponses));
+        }
+
+        function saveMainQuestions() {
+            localStorage.setItem('mainQuestions', JSON.stringify(mainQuestions));
+        }
+
+        function saveAnswers() {
+            localStorage.setItem('answers', JSON.stringify(answers));
+        }
+
+        function loadLearnedResponses() {
+            const storedResponses = localStorage.getItem('defaultLearnedResponses');
+            if (storedResponses) {
+                defaultLearnedResponses = {
+                    ...defaultLearnedResponses,
+                    ...JSON.parse(storedResponses)
+                };
+            }
+        }
+
+        function getSimilarity(str1, str2) {
+            str1 = str1.toLowerCase();
+            str2 = str2.toLowerCase();
+            const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+
+            for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+            for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+
+            for (let j = 1; j <= str2.length; j++) {
+                for (let i = 1; i <= str1.length; i++) {
+                    const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+                    matrix[j][i] = Math.min(
+                        matrix[j][i - 1] + 1,
+                        matrix[j - 1][i] + 1,
+                        matrix[j - 1][i - 1] + indicator
+                    );
+                }
+            }
+
+            const distance = matrix[str2.length][str1.length];
+            const maxLength = Math.max(str1.length, str2.length);
+            return 1 - distance / maxLength;
+        }
+
+        function findClosestMatch(input) {
+            const threshold = 0.4;
+            let bestMatch = null;
+            let highestSimilarity = 0;
+
+            for (const question in predefinedResponses) {
+                const similarity = getSimilarity(input, question);
+                if (similarity > highestSimilarity && similarity >= threshold) {
+                    highestSimilarity = similarity;
+                    bestMatch = question;
+                }
+            }
+
+            for (const mainQuestion in mainQuestions) {
+                for (const subQuestion of mainQuestions[mainQuestion]) {
+                    const similarity = getSimilarity(input, subQuestion);
+                    if (similarity > highestSimilarity && similarity >= threshold) {
+                        highestSimilarity = similarity;
+                        bestMatch = mainQuestion;
+                    }
+                }
+            }
+
+            return bestMatch;
+        }
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            const hours = date.getHours();
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const hours12 = hours % 12 || 12;
+            return `${hours12}:${minutes} ${ampm}`;
+        }
+
+        function sendMessage() {
+            let message = messageInput.value.trim();
+            if (!message) return;
+
+            const timestamp = new Date().toISOString();
+            const newMessage = {
+                text: message,
+                type: 'sent',
+                timestamp,
+                reaction: null
+            };
+            messages.push(newMessage);
+            appendMessage(newMessage.text, 'sent', timestamp, messages.length - 1, newMessage.reaction);
+            saveMessages();
+            messageInput.value = '';
+            messageInput.style.height = '40px';
+            toggleInputState();
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            if (message === 'setting') {
+                showSettingsForm();
+                return;
+            } else if (message === 'remove') {
+                showPlusMenu();
+                return;
+            } else if (message === 'প্রশ্ন দেও') {
+                showQuestionList();
+                return;
+            } else if (message === 'বন্ধ করো') {
+                hideQuestionList();
+                return;
+            } else if (message === 'প্রশ্ন পত্র') {
+                showMainQuestionList();
+                return;
+            } else if (message === 'বন্ধ') {
+                hideMainQuestionList();
+                return;
+            } else if (message === 'উত্তর পত্র') {
+                showAnswerList();
+                return;
+            } else if (message === 'প্রশ্ন') {
+                showMainQuestionForm();
+                return;
+            } else if (message === 'উত্তর') {
+                showAnswerForm();
+                return;
+            }
+
+            showTypingAnimation();
+            setTimeout(() => {
+                hideTypingAnimation();
+                respondToMessage(message);
+            }, 1000);
+        }
+
+        function appendMessage(text, type, timestamp, index, reaction = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.dataset.index = index;
+
+            const timeColor = type === 'sent' ? localStorage.getItem('sentTextColor') || '#ffffff' : localStorage.getItem('replyTextColor') || '#000000';
+            const tickMarks = type === 'sent' ? '<span class="tick-marks">✔✔</span>' : '';
+            const timeHtml = `<div class="message-time" style="color: ${timeColor}">${formatTimestamp(timestamp)}${tickMarks}</div>`;
+
+            let reactionHtml = '';
+            if (reaction) {
+                reactionHtml = `<div class="reaction-btn" onclick="removeReaction(${index})">${reaction}</div>`;
+            }
+
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <div>${text}</div>
+                    ${timeHtml}
+                </div>
+                ${reactionHtml}
+            `;
+
+            if (type === 'sent' && localStorage.getItem('sentBoxColor')) {
+                messageDiv.querySelector('.message-content').style.backgroundColor = localStorage.getItem('sentBoxColor');
+            }
+            if (type === 'received' && localStorage.getItem('replyBoxColor')) {
+                messageDiv.querySelector('.message-content').style.backgroundColor = localStorage.getItem('replyBoxColor');
+            }
+            if (type === 'sent' && localStorage.getItem('sentTextColor')) {
+                messageDiv.querySelector('.message-content').style.color = localStorage.getItem('sentTextColor');
+            }
+            if (type === 'received' && localStorage.getItem('replyTextColor')) {
+                messageDiv.querySelector('.message-content').style.color = localStorage.getItem('replyTextColor');
+            }
+
+            let startX, startY;
+            let longPressTimer;
+
+            const showMenus = (e) => {
+                e.preventDefault();
+                selectedMessageIndex = index;
+
+                const optionsMenu = document.getElementById('messageOptionsMenu');
+                optionsMenu.style.display = 'flex';
+
+                const reactionMenu = document.getElementById('reactionMenu');
+                const emojiOptionsMenu = document.getElementById('emojiOptionsMenu');
+                emojiOptionsMenu.innerHTML = '';
+                customEmojis.forEach(emoji => {
+                    const emojiButton = document.createElement('button');
+                    emojiButton.textContent = emoji;
+                    emojiButton.onclick = () => {
+                        reactToMessage(emoji);
+                    };
+                    emojiOptionsMenu.appendChild(emojiButton);
+                });
+                reactionMenu.style.display = 'flex';
+
+                const rect = messageDiv.getBoundingClientRect();
+                reactionMenu.style.left = `${rect.left + (rect.width / 2) - 50}px`;
+                reactionMenu.style.top = `${rect.top - 40}px`;
+            };
+
+            messageDiv.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+
+                longPressTimer = setTimeout(() => {
+                    showMenus(e);
+                }, 500);
+            }, { passive: true });
+
+            messageDiv.addEventListener('touchmove', () => {
+                clearTimeout(longPressTimer);
+            }, { passive: true });
+
+            messageDiv.addEventListener('touchend', () => {
+                clearTimeout(longPressTimer);
+            }, { passive: true });
+
+            chatBody.appendChild(messageDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function hideMenus() {
+            const reactionMenu = document.getElementById('reactionMenu');
+            const optionsMenu = document.getElementById('messageOptionsMenu');
+            reactionMenu.style.display = 'none';
+            optionsMenu.style.display = 'none';
+            selectedMessageIndex = -1;
+        }
+
+        document.addEventListener('touchstart', (e) => {
+            const reactionMenu = e.target.closest('.reaction-menu');
+            const optionsMenu = e.target.closest('.message-options');
+            const message = e.target.closest('.message');
+
+            if (!reactionMenu && !optionsMenu && !message) {
+                hideMenus();
+            }
+        }, { passive: true });
+
+        document.getElementById('reactionMenu').addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+        }, { passive: true });
+
+        function showTypingAnimation() {
+            hideTypingAnimation(); // Remove any existing typing animation
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message received typing';
+            typingDiv.innerHTML = `
+                <div class="message-content">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </div>`;
+            typingDiv.id = 'typingAnimation';
+            chatBody.appendChild(typingDiv);
+            typingDiv.style.display = 'block';
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function hideTypingAnimation() {
+            const typingDiv = document.getElementById('typingAnimation');
+            if (typingDiv) typingDiv.remove();
+        }
+
+        function respondToMessage(message) {
+            let response = predefinedResponses[message] || defaultLearnedResponses[message];
+
+            if (!response) {
+                const closestMatch = findClosestMatch(message);
+                if (closestMatch) {
+                    response = predefinedResponses[closestMatch] || defaultLearnedResponses[closestMatch];
+                }
+            }
+
+            if (!response && answers[message]) {
+                const answerList = answers[message];
+                response = answerList[Math.floor(Math.random() * answerList.length)];
+            }
+
+            const timestamp = new Date().toISOString();
+
+            if (response) {
+                const newMessage = { text: response, type: 'received', timestamp, reaction: null };
+                messages.push(newMessage);
+                appendMessage(newMessage.text, 'received', timestamp, messages.length - 1, newMessage.reaction);
+                saveMessages();
+            } else {
+                showInputForm(message);
+            }
+        }
+
+        function showInputForm(question) {
+            currentQuestion = question;
+            const inputForm = document.getElementById('inputForm');
+            const formQuestion = document.getElementById('formQuestion');
+            formQuestion.textContent = `"${question}" এর উত্তর দিন:`;
+            inputForm.style.display = 'block';
+            inputForm.scrollTop = 0;
+        }
+
+        function cancelInputForm() {
+            const inputForm = document.getElementById('inputForm');
+            const answerInput = document.getElementById('formAnswer');
+            answerInput.value = '';
+            inputForm.style.display = 'none';
+
+            if (!defaultLearnedResponses[currentQuestion]) {
+                defaultLearnedResponses[currentQuestion] = "আমি এখনো এটার উত্তর শিখিনি। 😅";
+                saveLearnedResponses();
+                const timestamp = new Date().toISOString();
+                const newMessage = { text: defaultLearnedResponses[currentQuestion], type: 'received', timestamp, reaction: null };
+                messages.push(newMessage);
+                appendMessage(newMessage.text, 'received', timestamp, messages.length - 1, newMessage.reaction);
+                saveMessages();
+            }
+        }
+
+        function submitAnswer() {
+            const answerInput = document.getElementById('formAnswer');
+            const newAnswer = answerInput.value.trim() || "আমি এখনো এটার উত্তর শিখিনি। 😅";
+            defaultLearnedResponses[currentQuestion] = newAnswer;
+
+            // mainQuestions-এ প্রশ্ন যোগ করা
+            if (!mainQuestions[currentQuestion]) {
+                mainQuestions[currentQuestion] = [currentQuestion];
+            }
+            // উত্তর answers অবজেক্টে যোগ করা
+            if (!answers[currentQuestion]) {
+                answers[currentQuestion] = [];
+            }
+            if (!answers[currentQuestion].includes(newAnswer)) {
+                answers[currentQuestion].push(newAnswer);
+            }
+
+            saveLearnedResponses();
+            saveMainQuestions();
+            saveAnswers();
+
+            const timestamp = new Date().toISOString();
+            const newMessage = { text: newAnswer, type: 'received', timestamp, reaction: null };
+            messages.push(newMessage);
+            appendMessage(newMessage.text, 'received', timestamp, messages.length - 1, newMessage.reaction);
+            saveMessages();
+            answerInput.value = '';
+            document.getElementById('inputForm').style.display = 'none';
+        }
+
+        function showQuestionList() {
+            const questionList = document.getElementById('questionList');
+            const questionItems = document.getElementById('questionItems');
+            questionItems.innerHTML = '';
+            Object.keys(defaultLearnedResponses).forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-item';
+                questionDiv.innerHTML = `
+                    <p><strong>প্রশ্ন:</strong> ${question}</p>
+                    <p><strong>উত্তর:</strong> ${defaultLearnedResponses[question] || 'উত্তর নেই'}</p>
+                    <button onclick="editQuestion(${index})" class="edit">প্রশ্ন এডিট</button>
+                    <button onclick="editAnswer(${index})" class="edit">উত্তর এডিট</button>
+                    <button onclick="deleteResponse(${index})" class="delete">ডিলিট</button>
+                `;
+                questionItems.appendChild(questionDiv);
+            });
+            questionList.style.display = 'block';
+            questionList.scrollTop = 0;
+        }
+
+        function hideQuestionList() {
+            document.getElementById('questionList').style.display = 'none';
+        }
+
+        function filterQuestions() {
+            const searchInput = document.getElementById('questionSearch').value.toLowerCase();
+            const questionItems = document.getElementById('questionItems');
+            questionItems.innerHTML = '';
+            Object.keys(defaultLearnedResponses).forEach((question, index) => {
+                if (question.toLowerCase().includes(searchInput)) {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'question-item';
+                    questionDiv.innerHTML = `
+                        <p><strong>প্রশ্ন:</strong> ${question}</p>
+                        <p><strong>উত্তর:</strong> ${defaultLearnedResponses[question] || 'উত্তর নেই'}</p>
+                        <button onclick="editQuestion(${index})" class="edit">প্রশ্ন এডিট</button>
+                        <button onclick="editAnswer(${index})" class="edit">উত্তর এডিট</button>
+                        <button onclick="deleteResponse(${index})" class="delete">ডিলিট</button>
+                    `;
+                    questionItems.appendChild(questionDiv);
+                }
+            });
+            document.getElementById('questionList').scrollTop = 0;
+        }
+
+        function editQuestion(index) {
+            const question = Object.keys(defaultLearnedResponses)[index];
+            const newQuestion = prompt("নতুন প্রশ্ন লিখুন:", question);
+            if (newQuestion && newQuestion.trim()) {
+                const answer = defaultLearnedResponses[question];
+                delete defaultLearnedResponses[question];
+                defaultLearnedResponses[newQuestion.trim()] = answer;
+                saveLearnedResponses();
+                showQuestionList();
+            }
+        }
+
+        function editAnswer(index) {
+            const question = Object.keys(defaultLearnedResponses)[index];
+            const newAnswer = prompt("নতুন উত্তর লিখুন:", defaultLearnedResponses[question]);
+            if (newAnswer && newAnswer.trim()) {
+                defaultLearnedResponses[question] = newAnswer.trim();
+                saveLearnedResponses();
+                showQuestionList();
+            }
+        }
+
+        function deleteResponse(index) {
+            const question = Object.keys(defaultLearnedResponses)[index];
+            if (confirm(`আপনি কি "${question}" প্রশ্নটি মুছতে চান?`)) {
+                delete defaultLearnedResponses[question];
+                saveLearnedResponses();
+                showQuestionList();
+            }
+        }
+
+        function showMainQuestionForm() {
+            const mainQuestionForm = document.getElementById('mainQuestionForm');
+            const subQuestionsContainer = document.getElementById('subQuestionsContainer');
+            subQuestionsContainer.innerHTML = `
+                <div class="sub-question-container">
+                    <input type="text" class="subQuestionInput" placeholder="সাব প্রশ্ন লিখুন...">
+                </div>
+            `;
+            document.getElementById('mainQuestionInput').value = '';
+            mainQuestionForm.style.display = 'block';
+            mainQuestionForm.scrollTop = 0;
+        }
+
+        function addSubQuestionInput() {
+            const subQuestionsContainer = document.getElementById('subQuestionsContainer');
+            const newSubQuestionDiv = document.createElement('div');
+            newSubQuestionDiv.className = 'sub-question-container';
+            newSubQuestionDiv.innerHTML = `
+                <input type="text" class="subQuestionInput" placeholder="সাব প্রশ্ন লিখুন...">
+            `;
+            subQuestionsContainer.appendChild(newSubQuestionDiv);
+        }
+
+        function cancelMainQuestionForm() {
+            const mainQuestionForm = document.getElementById('mainQuestionForm');
+            document.getElementById('mainQuestionInput').value = '';
+            document.getElementById('subQuestionsContainer').innerHTML = `
+                <div class="sub-question-container">
+                    <input type="text" class="subQuestionInput" placeholder="সাব প্রশ্ন লিখুন...">
+                </div>
+            `;
+            mainQuestionForm.style.display = 'none';
+        }
+
+        function submitMainQuestion() {
+            const mainQuestionInput = document.getElementById('mainQuestionInput').value.trim();
+            const subQuestionInputs = document.querySelectorAll('.subQuestionInput');
+            const newSubQuestions = Array.from(subQuestionInputs)
+                .map(input => input.value.trim())
+                .filter(value => value);
+
+            if (mainQuestionInput && newSubQuestions.length > 0) {
+                if (!mainQuestions[mainQuestionInput]) {
+                    mainQuestions[mainQuestionInput] = [];
+                }
+                newSubQuestions.forEach(subQuestion => {
+                    if (!mainQuestions[mainQuestionInput].includes(subQuestion)) {
+                        mainQuestions[mainQuestionInput].push(subQuestion);
+                    }
+                });
+                saveMainQuestions();
+                document.getElementById('mainQuestionInput').value = '';
+                document.getElementById('subQuestionsContainer').innerHTML = `
+                    <div class="sub-question-container">
+                        <input type="text" class="subQuestionInput" placeholder="সাব প্রশ্ন লিখুন...">
+                    </div>
+                `;
+                document.getElementById('mainQuestionForm').style.display = 'none';
+            } else {
+                alert("মেন প্রশ্ন এবং অন্তত একটি সাব প্রশ্ন লিখুন!");
+            }
+        }
+
+        function showMainQuestionList() {
+            const mainQuestionList = document.getElementById('mainQuestionList');
+            const mainQuestionItems = document.getElementById('mainQuestionItems');
+            mainQuestionItems.innerHTML = '';
+
+            const allQuestions = { ...mainQuestions };
+            Object.keys(defaultLearnedResponses).forEach(question => {
+                if (!allQuestions[question]) {
+                    allQuestions[question] = [question];
+                }
+            });
+
+            Object.keys(allQuestions).forEach((mainQuestion, index) => {
+                let subQuestionsHtml = allQuestions[mainQuestion].map((subQuestion, subIndex) => `
+                    <p><strong>সাব প্রশ্ন ${subIndex + 1}:</strong> ${subQuestion}</p>
+                `).join('');
+                let answersHtml = answers[mainQuestion] ? answers[mainQuestion].map((answer, subIndex) => `
+                    <p><strong>উত্তর ${subIndex + 1}:</strong> ${answer}</p>
+                `).join('') : `<p><strong>উত্তর:</strong> ${defaultLearnedResponses[mainQuestion] || 'উত্তর নেই'}</p>`;
+
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'main-question-item';
+                questionDiv.innerHTML = `
+                    <p><strong>মেন প্রশ্ন:</strong> ${mainQuestion}</p>
+                    ${subQuestionsHtml}
+                    ${answersHtml}
+                    <button onclick="addSubQuestion(${index})" class="add-sub-btn">+ সাব প্রশ্ন</button>
+                    <button onclick="showEditFullForm(${index})" class="edit">এডিট</button>
+                    <button onclick="deleteMainQuestion(${index})" class="delete">ডিলিট</button>
+                `;
+                mainQuestionItems.appendChild(questionDiv);
+            });
+            mainQuestionList.style.display = 'block';
+            mainQuestionList.scrollTop = 0;
+        }
+
+        function filterMainQuestions() {
+            const searchInput = document.getElementById('mainQuestionSearch').value.toLowerCase();
+            const mainQuestionItems = document.getElementById('mainQuestionItems');
+            mainQuestionItems.innerHTML = '';
+
+            const allQuestions = { ...mainQuestions };
+            Object.keys(defaultLearnedResponses).forEach(question => {
+                if (!allQuestions[question]) {
+                    allQuestions[question] = [question];
+                }
+            });
+
+            Object.keys(allQuestions).forEach((mainQuestion, index) => {
+                let shouldDisplay = mainQuestion.toLowerCase().includes(searchInput);
+                let subQuestionsHtml = '';
+                allQuestions[mainQuestion].forEach((subQuestion, subIndex) => {
+                    if (subQuestion.toLowerCase().includes(searchInput)) {
+                        shouldDisplay = true;
+                    }
+                    subQuestionsHtml += `<p><strong>সাব প্রশ্ন ${subIndex + 1}:</strong> ${subQuestion}</p>`;
+                });
+                let answersHtml = answers[mainQuestion] ? answers[mainQuestion].map((answer, subIndex) => `
+                    <p><strong>উত্তর ${subIndex + 1}:</strong> ${answer}</p>
+                `).join('') : `<p><strong>উত্তর:</strong> ${defaultLearnedResponses[mainQuestion] || 'উত্তর নেই'}</p>`;
+
+                if (shouldDisplay) {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'main-question-item';
+                    questionDiv.innerHTML = `
+                        <p><strong>মেন প্রশ্ন:</strong> ${mainQuestion}</p>
+                        ${subQuestionsHtml}
+                        ${answersHtml}
+                        <button onclick="addSubQuestion(${index})" class="add-sub-btn">+ সাব প্রশ্ন</button>
+                        <button onclick="showEditFullForm(${index})" class="edit">এডিট</button>
+                        <button onclick="deleteMainQuestion(${index})" class="delete">ডিলিট</button>
+                    `;
+                    mainQuestionItems.appendChild(questionDiv);
+                }
+            });
+            document.getElementById('mainQuestionList').scrollTop = 0;
+        }
+
+        function hideMainQuestionList() {
+            document.getElementById('mainQuestionList').style.display = 'none';
+        }
+
+        function addSubQuestion(index) {
+            const allQuestions = { ...mainQuestions };
+            Object.keys(defaultLearnedResponses).forEach(question => {
+                if (!allQuestions[question]) {
+                    allQuestions[question] = [question];
+                }
+            });
+            const mainQuestion = Object.keys(allQuestions)[index];
+            const newSubQuestion = prompt("নতুন সাব প্রশ্ন লিখুন:");
+            if (newSubQuestion && newSubQuestion.trim()) {
+                if (!mainQuestions[mainQuestion]) {
+                    mainQuestions[mainQuestion] = [mainQuestion];
+                }
+                if (!mainQuestions[mainQuestion].includes(newSubQuestion.trim())) {
+                    mainQuestions[mainQuestion].push(newSubQuestion.trim());
+                    saveMainQuestions();
+                    showMainQuestionList();
+                }
+            }
+        }
+
+        function showEditFullForm(index) {
+            const allQuestions = { ...mainQuestions };
+            Object.keys(defaultLearnedResponses).forEach(question => {
+                if (!allQuestions[question]) {
+                    allQuestions[question] = [question];
+                }
+            });
+            const mainQuestion = Object.keys(allQuestions)[index];
+            currentEditIndex = index;
+
+            const editFullForm = document.getElementById('editFullForm');
+            const editMainQuestionInput = document.getElementById('editMainQuestionInput');
+            const editSubQuestionsContainer = document.getElementById('editSubQuestionsContainer');
+            const editAnswersContainer = document.getElementById('editAnswersContainer');
+
+            editMainQuestionInput.value = mainQuestion;
+
+            editSubQuestionsContainer.innerHTML = '';
+            const subQuestions = mainQuestions[mainQuestion] || [mainQuestion];
+            subQuestions.forEach(subQuestion => {
+                const subQuestionDiv = document.createElement('div');
+                subQuestionDiv.className = 'sub-question-container';
+                subQuestionDiv.innerHTML = `
+                    <input type="text" class="editSubQuestionInput" value="${subQuestion}" placeholder="সাব প্রশ্ন লিখুন...">
+                    <button onclick="this.parentElement.remove()" style="background-color: #ff4444; color: white; padding: 5px 10px; border-radius: 5px; margin-left: 5px;">-</button>
+                `;
+                editSubQuestionsContainer.appendChild(subQuestionDiv);
+            });
+
+            editAnswersContainer.innerHTML = '';
+            const answerList = answers[mainQuestion] || [defaultLearnedResponses[mainQuestion] || ''];
+            answerList.forEach(answer => {
+                const answerDiv = document.createElement('div');
+                answerDiv.className = 'answer-container';
+                answerDiv.innerHTML = `
+                    <input type="text" class="editAnswerInput" value="${answer}" placeholder="উত্তর লিখুন...">
+                    <button onclick="this.parentElement.remove()" style="background-color: #ff4444; color: white; padding: 5px 10px; border-radius: 5px; margin-left: 5px;">-</button>
+                `;
+                editAnswersContainer.appendChild(answerDiv);
+            });
+
+            editFullForm.style.display = 'block';
+            editFullForm.scrollTop = 0;
+        }
+
+        function addEditSubQuestionInput() {
+            const editSubQuestionsContainer = document.getElementById('editSubQuestionsContainer');
+            const newSubQuestionDiv = document.createElement('div');
+            newSubQuestionDiv.className = 'sub-question-container';
+            newSubQuestionDiv.innerHTML = `
+            <input type="text" class="editSubQuestionInput" placeholder="সাব প্রশ্ন লিখুন...">
+                <button onclick="this.parentElement.remove()" style="background-color: #ff4444; color: white; padding: 5px 10px; border-radius: 5px; margin-left: 5px;">-</button>
+            `;
+            editSubQuestionsContainer.appendChild(newSubQuestionDiv);
+        }
+
+        function addEditAnswerInput() {
+            const editAnswersContainer = document.getElementById('editAnswersContainer');
+            const newAnswerDiv = document.createElement('div');
+            newAnswerDiv.className = 'answer-container';
+            newAnswerDiv.innerHTML = `
+                <input type="text" class="editAnswerInput" placeholder="উত্তর লিখুন...">
+                <button onclick="this.parentElement.remove()" style="background-color: #ff4444; color: white; padding: 5px 10px; border-radius: 5px; margin-left: 5px;">-</button>
+            `;
+            editAnswersContainer.appendChild(newAnswerDiv);
+        }
+
+        function submitEditFullForm() {
+            const allQuestions = { ...mainQuestions };
+            Object.keys(defaultLearnedResponses).forEach(question => {
+                if (!allQuestions[question]) {
+                    allQuestions[question] = [question];
+                }
+            });
+            const oldMainQuestion = Object.keys(allQuestions)[currentEditIndex];
+
+            const editMainQuestionInput = document.getElementById('editMainQuestionInput').value.trim();
+            const editSubQuestionInputs = document.querySelectorAll('.editSubQuestionInput');
+            const editAnswerInputs = document.querySelectorAll('.editAnswerInput');
+
+            const newSubQuestions = Array.from(editSubQuestionInputs)
+                .map(input => input.value.trim())
+                .filter(value => value);
+            const newAnswers = Array.from(editAnswerInputs)
+                .map(input => input.value.trim())
+                .filter(value => value);
+
+            if (editMainQuestionInput && newSubQuestions.length > 0 && newAnswers.length > 0) {
+                // পুরানো ডেটা মুছে ফেলা
+                delete mainQuestions[oldMainQuestion];
+                delete answers[oldMainQuestion];
+                delete defaultLearnedResponses[oldMainQuestion];
+
+                // নতুন ডেটা সেভ করা
+                mainQuestions[editMainQuestionInput] = newSubQuestions;
+                answers[editMainQuestionInput] = newAnswers;
+                defaultLearnedResponses[editMainQuestionInput] = newAnswers[0]; // প্রথম উত্তরটি defaultLearnedResponses-এ সেট
+
+                saveMainQuestions();
+                saveAnswers();
+                saveLearnedResponses();
+                showMainQuestionList();
+                document.getElementById('editFullForm').style.display = 'none';
+            } else {
+                alert("মেন প্রশ্ন, অন্তত একটি সাব প্রশ্শ্ন এবং একটি উত্তর লিখুন!");
+            }
+        }
+
+        function cancelEditFullForm() {
+            document.getElementByClassName('edit-full-form').style.display = 'none';
+            document.getElementById('editMainQuestionInput').value = '';
+            document.getElementById('editSubQuestionsContainer').innerHTML = `
+                <div class="sub-question-container">
+                    <input type="text" class="editSubQuestionInput" placeholder="সাব প্রশ্ন লিখুন...">
+                </div>
+            `;
+            document.getElementById('editAnswersContainer').innerHTML = `
+                <div class="answer-container">
+                    <div class="input-container">
+                    <input type="text" class="editAnswerInput" placeholder="উত্তর লিখুন...">
+                        </div>
+                </div>
+            `;
+        }
+
+        function deleteMainQuestion(index) {
+            const allQuestions = { ...mainQuestions };
+            Object.keys(defaultLearnedResponses).forEach(question => {
+                if (!allQuestions[question]) {
+                    allQuestions[question] = [question];
+                }
+            });
+            const mainQuestion = Object.keys(allQuestions)[index];
+            if (confirm(`Are you sure you want to delete the main question "${mainQuestion}"??`)) {
+                delete mainQuestions[mainQuestion];
+                delete answers[mainQuestion];
+                delete defaultLearnedResponses[mainQuestion];
+                saveMainQuestions();
+                saveAnswers();
+                saveLearnedResponses();
+                showMainQuestionList();
+            }
+        }
+
+        function showAnswerList() {
+            const answerList = document.getElementById('answerList');
+            const answerItems = document.getElementById('answerItems');
+            answerItems.innerHTML = '';
+            Object.keys(answers).forEach((question, index) => {
+                answers[question].forEach((answerQuestion, answerIndex) => {
+                    const answerDiv = document.createElement('div');
+                    answerDiv.className = 'answer-item';
+                    answerDiv.innerHTML = `
+                        <p><strong>প্রশ্ন:</strong> ${question}</p>
+                        <p><strong>উত্তর ${answerIndex + 1}:</strong> ${answer}</p>
+                        <button onclick="editAnswerForList(${index}, ${answerIndex})" class="edit">এডিট উত্তর</button>
+                        <button onclick="deleteAnswer(${index}, ${answerIndex})" class="delete">ডিলিট</button>
+                    `;
+                    answerItems.appendChild(answerDiv);
+                });
+            });
+            answerList.style.display = 'block';
+            answerList.scrollTop = 0;
+        }
+
+        function hideAnswerList() {
+            document.getElementById('answerList').style.display = 'none';
+        }
+
+        function filterAnswers() {
+            const searchInput = document.getElementById('answerSearch').value.toLowerCase();
+            const answerItems = document.getElementById('answerItems');
+            answerItems.innerHTML = '';
+            Object.keys(answers).forEach((question, index) => {
+                answers[question].forEach((answer, answerIndex) => {
+                    if (question.toLowerCase().includes(searchInput) || answer.toLowerCase().includes(searchInput)) {
+                        const answerDiv = document.createElement('div');
+                        answerDiv.className = 'answer-item';
+                        answerDiv.innerHTML = `
+                            <p><strong>প্রশ্ন:</strong> ${question}</p>
+                            <p><strong>উত্তর ${answerIndex + 1}:</strong> ${answer}</p>
+                            <button onclick="editAnswerForList(${index}, ${answerIndex})" class="edit">এডিট উত্তর</button>
+                            <button onclick="deleteAnswer(${index}, ${answerIndex})" class="delete">ডিলিট</button>
+                        `;
+                        answerItems.appendChild(answerDiv);
+                    }
+                });
+            });
+            document.getElementById('answerList').scrollTop = 0;
+        }
+
+        function editAnswerForList(index, answerIndex) {
+            const question = Object.keys(answers)[index];
+            const currentAnswer = answers[question][answerIndex];
+            const newAnswer = prompt("নতুন উত্তর লিখুন:", currentAnswer);
+            if (newAnswer && newAnswer.trim()) {
+                answers[question][answerIndex] = newAnswer.trim();
+                if (answerIndex === 0) {
+                    defaultLearnedResponses[question] = newAnswer.trim();
+                }
+                saveAnswers();
+                saveLearnedResponses();
+                showAnswerList();
+            }
+        }
+
+        function deleteAnswer(index, answerIndex) {
+            const question = Object.keys(answers)[index];
+            if (confirm(`আপনি কি "${question}" এর উত্তরটি মুছতে চান?`)) {
+                answers[question].splice(answerIndex, 1);
+                if (answers[question].length === 0) {
+                    delete answers[question];
+                    delete defaultLearnedResponses[question];
+                } else if (answerIndex === 0) {
+                    defaultLearnedResponses[question] = answers[question][0] || '';
+                }
+                saveAnswers();
+                saveLearnedResponses();
+                showAnswerList();
+            }
+        }
+
+        function showAnswerForm() {
+            const answerForm = document.getElementById('answerForm');
+            const answersContainer = document.getElementById('answersContainer');
+            answersContainer.innerHTML = `
+                <div class="answer-container">
+                    <input type="text" class="answerInput" placeholder="উত্তর লিখুন...">
+                </div>
+            `;
+            document.getElementById('answerQuestionInput').value = '';
+            answerForm.style.display = 'block';
+            answerForm.scrollTop = 0;
+        }
+
+        function addAnswerInput() {
+            const answersContainer = document.getElementById('answersContainer');
+            const newAnswerDiv = document.createElement('div');
+            newAnswerDiv.className = 'answer-container';
+            newAnswerDiv.innerHTML = `
+                <input type="text" class="answerInput" placeholder="উত্তর লিখুন...">
+            `;
+            answersContainer.appendChild(newAnswerDiv);
+        }
+
+        function cancelAnswerForm() {
+            const answerForm = document.getElementById('answerForm');
+            document.getElementById('answerQuestionInput').value = '';
+            document.getElementById('answersContainer').innerHTML = `
+                <div class="answer-container">
+                    <input type="text" class="answerInput" placeholder="উত্তর লিখুন...">
+                </div>
+            `;
+            answerForm.style.display = 'none';
+        }
+
+        function submitAnswerForm() {
+            const questionInput = document.getElementById('answerQuestionInput').value.trim();
+            const answerInputs = document.querySelectorAll('.answerInput');
+            const newAnswers = Array.from(answerInputs)
+                .map(input => input.value.trim())
+                .filter(value => value);
+
+            if (questionInput && newAnswers.length > 0) {
+                if (!answers[questionInput]) {
+                    answers[questionInput] = [];
+                }
+                newAnswers.forEach(answer => {
+                    if (!answers[questionInput].includes(answer)) {
+                        answers[questionInput].push(answer);
+                    }
+                });
+                defaultLearnedResponses[questionInput] = newAnswers[0];
+                if (!mainQuestions[questionInput]) {
+                    mainQuestions[questionInput] = [questionInput];
+                }
+                saveAnswers();
+                saveLearnedResponses();
+                saveMainQuestions();
+                document.getElementById('answerQuestionInput').value = '';
+                document.getElementById('answersContainer').innerHTML = `
+                    <div class="answer-container">
+                        <input type="text" class="answerInput" placeholder="উত্তর লিখুন...">
+                    </div>
+                `;
+                document.getElementById('answerForm').style.display = 'none';
+            } else {
+                alert("প্রশ্ন এবং অন্তত একটি উত্তর লিখুন!");
+            }
+        }
+
+        function showProfileForm() {
+            document.getElementById('profileForm').style.display = 'block';
+        }
+
+        function saveProfile() {
+            const nameInput = document.getElementById('nameInput').value.trim();
+            const picInput = document.getElementById('picInput').files[0];
+            if (nameInput) {
+                profileName.textContent = nameInput;
+                localStorage.setItem('profileName', nameInput);
+            }
+            if (picInput) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePic.src = e.target.result;
+                    localStorage.setItem('profilePic', e.target.result);
+                };
+                reader.readAsDataURL(picInput);
+            }
+            document.getElementById('profileForm').style.display = 'none';
+            document.getElementById('nameInput').value = '';
+            document.getElementById('picInput').value = '';
+        }
+
+        function handleProfilePicUpload() {
+            const picInput = document.getElementById('picInput').files[0];
+            if (picInput) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePic.src = e.target.result;
+                };
+                reader.readAsDataURL(picInput);
+            }
+        }
+
+        function showSettingsForm() {
+            document.getElementById('settingsForm').style.display = 'block';
+        }
+
+        function setBackgroundImage() {
+            const bgPicInput = document.getElementById('bgPicInput').files[0];
+            if (bgPicInput) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    chatBody.style.backgroundImage = `url(${e.target.result})`;
+                    chatBody.style.backgroundSize = 'cover';
+                    chatBody.style.backgroundPosition = 'center top';
+                    inputArea.style.backgroundImage = `url(${e.target.result})`;
+                    inputArea.style.backgroundSize = 'cover';
+                    inputArea.style.backgroundPosition = 'center bottom';
+                    inputArea.style.backgroundRepeat = 'no-repeat';
+                    localStorage.setItem('bgPic', e.target.result);
+                };
+                reader.readAsDataURL(bgPicInput);
+            }
+        }
+
+        function saveSettings() {
+            const boardColor = document.getElementById('boardColorInput').value;
+            const sentBoxColor = document.getElementById('sentBoxColorInput').value;
+            const replyBoxColor = document.getElementById('replyBoxColorInput').value;
+            const sentTextColor = document.getElementById('sentTextColorInput').value;
+            const replyTextColor = document.getElementById('replyTextColorInput').value;
+            const timeColor = document.getElementById('timeColorInput').value;
+            const dateHeaderTextColor = document.getElementById('dateHeaderTextColorInput').value;
+            const dateHeaderBoxColor = document.getElementById('dateHeaderBoxColorInput').value;
+
+            chatBody.style.backgroundColor = boardColor;
+            localStorage.setItem('boardColor', boardColor);
+            localStorage.setItem('sentBoxColor', sentBoxColor);
+            localStorage.setItem('replyBoxColor', replyBoxColor);
+            localStorage.setItem('sentTextColor', sentTextColor);
+            localStorage.setItem('replyTextColor', replyTextColor);
+            localStorage.setItem('timeColor', timeColor);
+            localStorage.setItem('dateHeaderTextColor', dateHeaderTextColor);
+            localStorage.setItem('dateHeaderBoxColor', dateHeaderBoxColor);
+
+            document.querySelectorAll('.message.sent .message-content').forEach(el => {
+                el.style.backgroundColor = sentBoxColor;
+                el.style.color = sentTextColor;
+            });
+            document.querySelectorAll('.message.received .message-content').forEach(el => {
+                el.style.backgroundColor = replyBoxColor;
+                el.style.color = replyTextColor;
+            });
+            document.querySelectorAll('.message-time').forEach(el => {
+                el.style.color = timeColor;
+            });
+            document.querySelectorAll('.date-header').forEach(header => {
+                header.style.color = dateHeaderTextColor;
+                header.style.backgroundColor = dateHeaderBoxColor;
+            });
+
+            document.getElementById('settingsForm').style.display = 'none';
+        }
+
+        function showBoxSettingsForm() {
+            document.getElementById('boxSettingsForm').style.display = 'block';
+        }
+
+        function saveBoxSettings() {
+            const headerColor = document.getElementById('headerColorInput').value;
+            const headerTimeColor = document.getElementById('headerTimeColorInput').value;
+            const messageInputColor = document.getElementById('messageInputColorInput').value;
+            const messageInputTextColor = document.getElementById('messageInputTextColorInput').value;
+            const reactionMenuWidth = document.getElementById('reactionMenuWidthInput').value;
+            const reactionMenuBgColor = document.getElementById('reactionMenuBgColorInput').value;
+            const cursorColor = document.getElementById('cursorColorInput').value;
+            const goToLatestBtnSize = document.getElementById('goToLatestBtnSizeInput').value;
+            const goToLatestBtnColor = document.getElementById('goToLatestBtnColorInput').value;
+
+            document.getElementById('header').style.backgroundColor = headerColor;
+            document.getElementById('dateDisplay').style.color = headerTimeColor;
+            document.getElementById('messageInputWrapper').style.backgroundColor = messageInputColor;
+            document.getElementById('messageInput').style.color = messageInputTextColor;
+            document.querySelector('.reaction-menu').style.width = `${reactionMenuWidth}cm`;
+            document.querySelector('.reaction-menu').style.backgroundColor = reactionMenuBgColor;
+            document.querySelector('#messageInput').style.caretColor = cursorColor;
+            goToLatestBtn.style.width = `${goToLatestBtnSize}px`;
+            goToLatestBtn.style.height = `${goToLatestBtnSize}px`;
+            goToLatestBtn.style.backgroundColor = goToLatestBtnColor;
+
+            localStorage.setItem('headerColor', headerColor);
+            localStorage.setItem('headerTimeColor', headerTimeColor);
+            localStorage.setItem('messageInputColor', messageInputColor);
+            localStorage.setItem('messageInputTextColor', messageInputTextColor);
+            localStorage.setItem('reactionMenuWidth', reactionMenuWidth);
+            localStorage.setItem('reactionMenuBgColor', reactionMenuBgColor);
+            localStorage.setItem('cursorColor', cursorColor);
+            localStorage.setItem('goToLatestBtnSize', goToLatestBtnSize);
+            localStorage.setItem('goToLatestBtnColor', goToLatestBtnColor);
+
+            document.getElementById('boxSettingsForm').style.display = 'none';
+        }
+
+        function showPlusMenu() {
+            document.getElementById('plusMenu').style.display = 'block';
+        }
+
+        function showClearAllConfirm() {
+            if (confirm('আপনি কি সব মেসেজ মুছতে চান?')) {
+                messages = [];
+                saveMessages();
+                loadMessages();
+                document.getElementById('plusMenu').style.display = 'none';
+            }
+        }
+
+        function showCalendarForm() {
+            document.getElementById('calendarForm').style.display = 'block';
+            document.getElementById('plusMenu').style.display = 'none';
+        }
+
+        function hideCalendarForm() {
+            document.getElementById('calendarForm').style.display = 'none';
+        }
+
+        function deleteMessagesByDateTime() {
+            const startDate = document.getElementById('startDate').value;
+            const startTime = document.getElementById('startTime').value;
+            const endDate = document.getElementById('endDate').value;
+            const endTime = document.getElementById('endTime').value;
+
+            if (startDate && startTime && endDate && endTime) {
+                const startDateTime = new Date(`${startDate}T${startTime}`);
+                const endDateTime = new Date(`${endDate}T${endTime}`);
+
+                messages = messages.filter(msg => {
+                    const msgDateTime = new Date(msg.timestamp);
+                    return msgDateTime < startDateTime || msgDateTime > endDateTime;
+                });
+
+                saveMessages();
+                loadMessages();
+                hideCalendarForm();
+            } else {
+                alert("সব ফিল্ড পূরণ করুন!");
+            }
+        }
+
+        function showMessageSearchForm() {
+            document.getElementById('messageSearchForm').style.display = 'block';
+            document.getElementById('settingsForm').style.display = 'none';
+            filterMessages();
+        }
+
+        function hideMessageSearchForm() {
+            document.getElementById('messageSearchForm').style.display = 'none';
+        }
+
+        function filterMessages() {
+            const searchInput = document.getElementById('messageSearchInput').value.toLowerCase();
+            const messageSearchResults = document.getElementById('messageSearchResults');
+            messageSearchResults.innerHTML = '';
+
+            messages.forEach((msg, index) => {
+                if (msg.text.toLowerCase().includes(searchInput)) {
+                    const searchItem = document.createElement('div');
+                    searchItem.className = 'message-search-item';
+                    searchItem.innerHTML = `
+                        <p><strong>${msg.type === 'sent' ? 'আপনি' : 'তিনি'}:</strong> ${msg.text}</p>
+                        <p><strong>সময়:</strong> ${formatTimestamp(msg.timestamp)}</p>
+                    `;
+                    searchItem.onclick = () => {
+                        const messageElement = document.querySelector(`.message[data-index="${index}"]`);
+                        if (messageElement) {
+                            messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            hideMessageSearchForm();
+                        }
+                    };
+                    messageSearchResults.appendChild(searchItem);
+                }
+            });
+            messageSearchResults.scrollTop = 0;
+        }
+
+        function showEmojiSettingsForm() {
+            document.getElementById('emojiSettingsForm').style.display = 'block';
+            document.getElementById('settingsForm').style.display = 'none';
+            loadEmojiList();
+        }
+
+        function hideEmojiSettingsForm() {
+            document.getElementById('emojiSettingsForm').style.display = 'none';
+        }
+
+        function loadEmojiList() {
+            const emojiList = document.getElementById('emojiList');
+            emojiList.innerHTML = '';
+            customEmojis.forEach((emoji, index) => {
+                const emojiItem = document.createElement('div');
+                emojiItem.innerHTML = `
+                    <span>${emoji}</span>
+                    <button onclick="deleteEmoji(${index})" style="background-color: #ff4444; color: white; padding: 5px 10px; border-radius: 5px; margin-left: 10px;">মুছুন</button>
+                `;
+                emojiList.appendChild(emojiItem);
+            });
+        }
+
+        function addEmoji() {
+            const emojiInput = document.getElementById('emojiInput').value.trim();
+            if (emojiInput && !customEmojis.includes(emojiInput)) {
+                customEmojis.push(emojiInput);
+                saveCustomEmojis();
+                loadEmojiList();
+                document.getElementById('emojiInput').value = '';
+            }
+        }
+
+        function deleteEmoji(index) {
+            customEmojis.splice(index, 1);
+            saveCustomEmojis();
+            loadEmojiList();
+        }
+
+        function reactToMessage(emoji) {
+            if (selectedMessageIndex >= 0 && selectedMessageIndex < messages.length) {
+                messages[selectedMessageIndex].reaction = emoji;
+                saveMessages();
+                loadMessages();
+                hideMenus();
+            }
+        }
+
+        function removeReaction(index) {
+            if (index >= 0 && index < messages.length) {
+                messages[index].reaction = null;
+                saveMessages();
+                loadMessages();
+            }
+        }
+
+        function copyMessage() {
+            if (selectedMessageIndex >= 0 && selectedMessageIndex < messages.length) {
+                const messageText = messages[selectedMessageIndex].text;
+                navigator.clipboard.writeText(messageText).then(() => {
+                    alert('মেসেজ কপি করা হয়েছে!');
+                });
+                hideMenus();
+            }
+        }
+
+        function editMessage() {
+            if (selectedMessageIndex >= 0 && selectedMessageIndex < messages.length) {
+                const message = messages[selectedMessageIndex];
+                if (message.type === 'sent') {
+                    document.getElementById('messageEditInput').value = message.text;
+                    document.getElementById('messageEditForm').style.display = 'block';
+                } else {
+                    alert('আপনি শুধু নিজের মেসেজ এডিট করতে পারেন!');
+                }
+                hideMenus();
+            }
+        }
+
+        function submitEditedMessage() {
+            const newText = document.getElementById('messageEditInput').value.trim();
+            if (newText && selectedMessageIndex >= 0 && selectedMessageIndex < messages.length) {
+                messages[selectedMessageIndex].text = newText;
+                saveMessages();
+                loadMessages();
+                document.getElementById('messageEditForm').style.display = 'none';
+            }
+        }
+
+        function deleteMessage() {
+            if (selectedMessageIndex >= 0 && selectedMessageIndex < messages.length) {
+                if (confirm('আপনি কি এই মেসেজটি মুছতে চান?')) {
+                    messages.splice(selectedMessageIndex, 1);
+                    saveMessages();
+                    loadMessages();
+                }
+                hideMenus();
+            }
+        }
+    </script>
+</body>
+</html>
